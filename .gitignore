@@ -1,0 +1,13 @@
+# Python virtual environment
+.venv/
+
+# MLflow local database and tracking files
+mlflow.db
+mlruns/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env

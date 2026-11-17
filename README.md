@@ -18,9 +18,23 @@ The objective of this project is to compare two pretrained Hugging Face sentimen
 
 - **Task:** Binary Sentiment Classification
 - **Classes:** Positive and Negative
-- **Dataset:** To be finalized
-- **Evaluation subset size:** To be finalized
 - **Evaluation inputs:** `data/eval_inputs.csv`
+
+### Dataset
+
+- **Source:** Lecturer-provided news sentiment analysis dataset.
+- **Original records:** 3,500.
+- **Evaluation records:** 200.
+- **Positive examples:** 100.
+- **Negative examples:** 100.
+- **Duplicate handling:** Duplicate URLs removed before sampling.
+- **Neutral examples:** Excluded because both selected models perform binary sentiment classification.
+- **Random seed:** 42.
+- **Input text:** Combined news title and description.
+- **Text preprocessing:** HTML entities decoded and whitespace normalized.
+- **Evaluation file:** `data/eval_inputs.csv`.
+
+Both models will receive exactly the same 200 evaluation texts in the same order.
 
 ### Model A — Initial Champion
 

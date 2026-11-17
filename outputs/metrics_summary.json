@@ -1,0 +1,21 @@
+{
+    "model_a": {
+        "model_id": "distilbert-base-uncased-finetuned-sst-2-english",
+        "accuracy": 0.485,
+        "precision_macro": 0.4848162769511084,
+        "recall_macro": 0.485,
+        "macro_f1": 0.4834373981293412,
+        "total_inference_time": 9.503475999999864,
+        "average_latency": 0.04751737999999932
+    },
+    "model_b": {
+        "model_id": "textattack/bert-base-uncased-SST-2",
+        "accuracy": 0.55,
+        "precision_macro": 0.5500801282051282,
+        "recall_macro": 0.55,
+        "macro_f1": 0.5498199279711885,
+        "total_inference_time": 18.32543160000023,
+        "average_latency": 0.09162715800000115
+    },
+    "evaluation_sample_count": 200
+}

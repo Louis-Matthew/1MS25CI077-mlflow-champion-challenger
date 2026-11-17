@@ -4,6 +4,7 @@
 # MLflow local database and tracking files
 mlflow.db
 mlruns/
+mlartifacts/
 
 # Python cache
 __pycache__/

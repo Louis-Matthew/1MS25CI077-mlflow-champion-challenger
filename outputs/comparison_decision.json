@@ -1,0 +1,11 @@
+{
+    "champion": "Model B",
+    "champion_model_id": "textattack/bert-base-uncased-SST-2",
+    "decision_reason": "Model B has a macro-F1 improvement of at least 0.01.",
+    "minimum_improvement_margin": 0.01,
+    "model_a_macro_f1": 0.4834373981293412,
+    "model_b_macro_f1": 0.5498199279711885,
+    "macro_f1_difference_b_minus_a": 0.06638252984184728,
+    "model_a_average_latency": 0.04751737999999932,
+    "model_b_average_latency": 0.09162715800000115
+}

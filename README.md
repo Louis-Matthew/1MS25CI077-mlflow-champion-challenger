@@ -1,10 +1,11 @@
 # 1MS25CI077-mlflow-champion-challenger
+
 # Champion–Challenger Model Comparison with Hugging Face and MLflow
 
 **Institution:** Ramaiah Institute of Technology  
 **USN:** 1MS25CI077  
 **Project:** MLOps with MLflow Mini Project  
-**Task:** Sentiment Classification
+**Task:** Binary Sentiment Classification
 
 ---
 
@@ -12,165 +13,257 @@
 
 ### Objective
 
-The objective of this project is to compare two pretrained Hugging Face sentiment classification models using identical evaluation inputs, track their performance using MLflow, and select a Champion model using a predefined decision rule.
+Compare two pretrained Hugging Face sentiment classification models using identical evaluation inputs, track their performance using MLflow, and select a Champion using a predefined decision rule.
 
-### Task
+### Task and Dataset
 
 - **Task:** Binary Sentiment Classification
 - **Classes:** Positive and Negative
+- **Dataset:** Lecturer-provided News Sentiment Analysis dataset
+- **Original dataset size:** 3,500 records
+- **Evaluation subset size:** 200 records
+- **Positive examples:** 100
+- **Negative examples:** 100
 - **Evaluation inputs:** `data/eval_inputs.csv`
-
-### Dataset
-
-- **Source:** Lecturer-provided news sentiment analysis dataset.
-- **Original records:** 3,500.
-- **Evaluation records:** 200.
-- **Positive examples:** 100.
-- **Negative examples:** 100.
+- **New prediction inputs:** `data/new_data.csv`
+- **Random seed:** 42
 - **Duplicate handling:** Duplicate URLs removed before sampling.
 - **Neutral examples:** Excluded because both selected models perform binary sentiment classification.
-- **Random seed:** 42.
 - **Input text:** Combined news title and description.
 - **Text preprocessing:** HTML entities decoded and whitespace normalized.
-- **Evaluation file:** `data/eval_inputs.csv`.
 
-Both models will receive exactly the same 200 evaluation texts in the same order.
+Both models receive exactly the same 200 evaluation texts in the same order.
 
 ### Model A — Initial Champion
 
 - **Hugging Face Model ID:** `distilbert-base-uncased-finetuned-sst-2-english`
 - **Role:** Initial Champion
-- **Description:** DistilBERT-based binary sentiment classification model.
+- **Architecture:** DistilBERT
+- **Approximate model size:** 67 million parameters
 
 ### Model B — Challenger
 
 - **Hugging Face Model ID:** `textattack/bert-base-uncased-SST-2`
 - **Role:** Challenger
-- **Description:** BERT-based binary sentiment classification model.
-- **Special handling:** Its `LABEL_0` and `LABEL_1` outputs must be mapped to the correct sentiment labels.
+- **Architecture:** BERT
+- **Approximate model size:** 110 million parameters
+- **Special handling:** The model outputs `LABEL_0` and `LABEL_1`, which are mapped to negative and positive, respectively.
 
 ---
 
-## 2. How to Run
+## 2. Project Structure
 
-The following commands will be finalized and tested as the project implementation is completed.
+```text
+1MS25CI077-mlflow-champion-challenger/
+│
+├── data/
+│   ├── news_sentiment_analysis.csv
+│   ├── eval_inputs.csv
+│   └── new_data.csv
+│
+├── outputs/
+│   ├── predictions.csv
+│   ├── metrics_summary.json
+│   ├── comparison_decision.json
+│   ├── confusion_matrices.png
+│   ├── model_comparison.png
+│   ├── disagreement_examples.csv
+│   └── new_data_predictions.csv
+│
+├── screenshots/
+│
+├── prepare_data.py
+├── evaluate.py
+├── register_champion.py
+├── predict_from_mlflow.py
+├── requirements.txt
+├── README.md
+└── .gitignore
+```
 
-### Environment Setup
+Local MLflow databases and artifact storage are excluded from Git using `.gitignore`.
+
+---
+
+## 3. How to Run
+
+### Step 1: Create and activate the virtual environment
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
+```
+
+### Step 2: Install dependencies
+
+```powershell
 python -m pip install -r requirements.txt
 ```
 
-### Start MLflow Tracking Server
+### Step 3: Start the MLflow tracking server
+
+Run this command in a separate terminal:
 
 ```powershell
 python -m mlflow server --backend-store-uri sqlite:///mlflow.db --host 127.0.0.1 --port 5000
 ```
 
-### Run Model Evaluation
+Open the MLflow dashboard:
+
+`http://127.0.0.1:5000`
+
+### Step 4: Prepare the evaluation dataset
+
+```powershell
+python prepare_data.py
+```
+
+This generates the fixed 200-example evaluation dataset at `data/eval_inputs.csv`.
+
+### Step 5: Evaluate both models
 
 ```powershell
 python evaluate.py
 ```
 
-### Register Models and Assign Aliases
+This performs inference, calculates classification metrics, logs both models and their metrics to MLflow, generates comparison artifacts, and records the Champion decision.
+
+### Step 6: Register models and assign aliases
 
 ```powershell
 python register_champion.py
 ```
 
-### Predict on New Data
+This registers both models under the same registered model name and assigns the `champion` and `challenger` aliases.
+
+### Step 7: Predict on new data
 
 ```powershell
 python predict_from_mlflow.py
 ```
 
+This loads the Champion through its MLflow alias, reads the new examples from `data/new_data.csv`, generates predictions, and saves them in `outputs/new_data_predictions.csv`.
+
 ---
 
-## 3. Champion–Challenger Decision Rule
+## 4. Champion–Challenger Decision Rule
 
-The decision rule is defined before the final experiment run and will not be changed after examining the results.
+The decision rule was defined before the final evaluation and was not changed after examining the results.
 
 ### Primary Metric
 
-Macro-F1 score is the primary evaluation metric because it calculates the F1 score independently for each sentiment class and averages them equally.
+Macro-F1 is the primary metric because it calculates F1 independently for each class and averages the scores equally.
 
 - Higher Macro-F1 is better.
 - Lower inference latency is better.
 
 ### Minimum Improvement Margin
 
-The Challenger must improve Macro-F1 by at least **0.01 (one percentage point)** over the current Champion to qualify for replacement based on the primary metric.
-
-This margin is selected to avoid promoting a model based on a very small performance difference.
+The minimum improvement margin is **0.01 (one percentage point)**.
 
 ### Tie-Breaker
 
-If the difference in Macro-F1 is less than 0.01 in either direction, the model with lower average inference latency will be preferred.
-
-If both models have effectively equal latency, the existing Champion (Model A) will remain Champion.
-
-### Final Decision Logic
-
-1. If Model B's Macro-F1 exceeds Model A's by at least 0.01, Model B becomes Champion.
-2. If Model A's Macro-F1 exceeds Model B's by at least 0.01, Model A remains Champion.
-3. If the difference is less than 0.01, select the faster model based on average inference latency.
-4. If both performance and latency are effectively equal, retain Model A.
-
-The final decision will be recorded in the MLflow comparison run and justified using evaluation metrics and inference time.
+- If Model B improves Macro-F1 over Model A by at least 0.01, Model B becomes Champion.
+- If Model A improves Macro-F1 over Model B by at least 0.01, Model A remains Champion.
+- If the absolute Macro-F1 difference is below 0.01, the faster model is selected using average inference latency.
+- If latency is also tied, Model A remains Champion.
 
 ---
 
-## 4. Results Table
+## 5. Evaluation Results
 
-The following table will be completed after evaluating both models on the same saved evaluation dataset.
+Both models were evaluated on the same 200 saved evaluation examples using CPU inference.
 
-| Metric | Model A | Model B | Difference |
-|---|---|---|---|
-| Accuracy | TBD | TBD | TBD |
-| Precision | TBD | TBD | TBD |
-| Recall | TBD | TBD | TBD |
-| Macro-F1 | TBD | TBD | TBD |
-| Average latency (ms) | TBD | TBD | TBD |
-| Total inference time (s) | TBD | TBD | TBD |
+| Metric | Model A: DistilBERT | Model B: BERT | Difference (B - A) |
+|---|---:|---:|---:|
+| Accuracy | 0.4850 | 0.5500 | +0.0650 |
+| Macro Precision | 0.4848 | 0.5501 | +0.0653 |
+| Macro Recall | 0.4850 | 0.5500 | +0.0650 |
+| Macro-F1 | 0.4834 | 0.5498 | +0.0664 |
+| Average Latency (ms) | 47.5 | 91.6 | +44.1 |
+| Total Inference Time (s) | 9.5035 | 18.3254 | +8.8219 |
 
----
+### Evaluation Artifacts
 
-## 5. Final Champion Decision
+- `outputs/predictions.csv`: Predictions and confidence scores for both models.
+- `outputs/metrics_summary.json`: Classification metrics and inference timing.
+- `outputs/comparison_decision.json`: Final Champion decision and supporting values.
+- `outputs/confusion_matrices.png`: Confusion matrices for both models.
+- `outputs/model_comparison.png`: Comparison of Accuracy and Macro-F1.
+- `outputs/disagreement_examples.csv`: Five selected examples where the models disagree, with qualitative analyst comments.
 
-**Selected Champion:** To be determined after evaluation.
-
-The final explanation will discuss:
-
-- Whether the Challenger improves on the initial Champion.
-- The difference in Macro-F1.
-- Whether the improvement is meaningful given the evaluation sample size.
-- The trade-offs in inference speed, model size and classification errors.
-- Why the final model was selected according to the predefined decision rule.
-
-The final explanation will be written after the experiment and supported by the MLflow results.
+A total of 27 disagreements were identified between the two models.
 
 ---
 
-## 6. Limitations and Declaration
+## 6. Final Champion Decision
+
+**Selected Champion: Model B — `textattack/bert-base-uncased-SST-2`**
+
+Model B, the Challenger, outperformed the initial Champion, Model A, on the 200-example evaluation dataset. Model B achieved a Macro-F1 score of 0.5498, compared with 0.4834 for Model A. The improvement was 0.0664, or 6.64 percentage points, exceeding the predeclared minimum improvement margin of 0.01. Model B also achieved higher accuracy (0.5500 compared with 0.4850), corresponding to 110 correct predictions versus 97 for Model A on the 200 examples.
+
+However, Model B was slower. Its average inference latency was 91.6 milliseconds per example, compared with 47.5 milliseconds for Model A. Its total inference time was 18.3254 seconds, while Model A required 9.5035 seconds. Model B is also larger, with approximately 110 million parameters compared with approximately 67 million for Model A.
+
+Despite these speed and size trade-offs, Model B was selected because the primary decision metric is Macro-F1, and its improvement exceeded the predefined threshold. The latency tie-breaker does not apply in this case.
+
+The improvement is meaningful under the project's decision rule, but it should not be interpreted as proof of general superiority. The evaluation contains only 200 balanced examples, and no statistical significance test or confidence interval was calculated. Therefore, performance should be checked on a larger and more diverse dataset before using the model in a real-world application.
+
+---
+
+## 7. Limitations and Declaration
 
 ### Limitations
 
-- The evaluation uses a limited subset of data rather than the entire dataset.
+- The evaluation uses 200 examples rather than the complete original dataset.
+- Neutral sentiment examples were excluded because the selected models perform binary classification.
+- Both models were evaluated using a balanced subset of 100 positive and 100 negative examples.
 - Model performance may vary with different evaluation samples.
-- Inference latency may vary depending on hardware and system load.
-- Small differences in evaluation metrics may not indicate a meaningful improvement.
+- Inference latency may vary depending on hardware, system load, and execution environment.
+- The results do not establish statistical significance or guarantee generalization to all news articles.
+- The 27 disagreement examples show that the models can interpret the same news text differently.
+- The dataset's original sentiment labels may not always be unambiguous from the available text.
 
 ### Declaration
 
 This project is an individual academic mini-project.
 
-AI assistance was used for guidance, understanding concepts, debugging and development support. The implementation, experiment results and final decisions will be reviewed and understood by the student.
+AI assistance through ChatGPT was used for guidance, understanding concepts, debugging, code development support, and documentation preparation.
 
-All code and design choices will be studied and explained during the viva.
+The implementation, experiment results, model comparison, and final decisions are to be reviewed and understood by the student. All code and design choices will be studied and explained during the viva.
 
 ---
 
-**Project Repository:** 1MS25CI077-mlflow-champion-challenger
+## 8. MLflow Model Registry
+
+**Registered Model Name:** `NewsSentimentClassifier`
+
+| Version | Hugging Face Model | Alias |
+|---|---|---|
+| Version 1 | `distilbert-base-uncased-finetuned-sst-2-english` | `challenger` |
+| Version 2 | `textattack/bert-base-uncased-SST-2` | `champion` |
+
+Both models are registered under a common name, and predictions are loaded through the Champion alias:
+
+```python
+models:/NewsSentimentClassifier@champion
+```
+
+---
+
+## 9. New-Data Predictions
+
+The project uses a separate input dataset containing eight new news headlines:
+
+`data/new_data.csv`
+
+The `predict_from_mlflow.py` script loads the Champion through the MLflow registry alias and generates predictions without directly importing or calling the Hugging Face pipeline.
+
+The output is saved as:
+
+`outputs/new_data_predictions.csv`
+
+The output includes the input text, predicted sentiment, confidence score, registered model version, and Hugging Face model ID.
+
+---
+
+**Project Repository:** `1MS25CI077-mlflow-champion-challenger`

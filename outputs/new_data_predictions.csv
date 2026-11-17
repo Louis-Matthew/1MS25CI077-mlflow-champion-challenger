@@ -1,0 +1,9 @@
+text,predicted_sentiment,confidence,model_version,hf_model_id
+The company reported record profits after strong customer growth.,positive,0.9984623193740845,2,textattack/bert-base-uncased-SST-2
+The government announced a major investment in renewable energy.,positive,0.9671598672866821,2,textattack/bert-base-uncased-SST-2
+The airline cancelled hundreds of flights due to unexpected technical problems.,negative,0.9966739416122437,2,textattack/bert-base-uncased-SST-2
+The new smartphone received excellent reviews for its battery life and camera.,positive,0.9992271661758423,2,textattack/bert-base-uncased-SST-2
+The factory temporarily closed after a serious safety incident.,negative,0.987986147403717,2,textattack/bert-base-uncased-SST-2
+Researchers announced a promising breakthrough in cancer detection.,positive,0.9922508597373962,2,textattack/bert-base-uncased-SST-2
+The retailer faced heavy losses following a major decline in sales.,negative,0.994988203048706,2,textattack/bert-base-uncased-SST-2
+The community celebrated the successful completion of its new public park.,positive,0.9985780715942383,2,textattack/bert-base-uncased-SST-2
